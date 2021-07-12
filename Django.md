@@ -283,3 +283,153 @@ B <-- b -- 서버
 
 {  /?page = paginator.어떤페이지 }	// 페이지 관련 정보도 있음
 
+
+  # 배포 사전준비
+
+{ 환경 변수, requirements.txt, AWS }
+
+
+
+##### 환경 변수
+
+- 시스템에 저장되어 있는 변수
+- 보통 비밀키 등 유출되면 안되는 정보
+- 환경 차이를 둘 때 사용 (테스트/프로덕션 구별 등)
+- os.environ 에서 dict 형식으로 불러올 수 있음
+- os.environ.get('변수명','기본값)으로 사용
+
+
+
+##### requirements
+
+- 파이썬(장고)앱을 실행하기 위해 우선 설치되어야 하는 패키지들(Django, Pillow 등)
+- 패키지명 == 버전 으로 저장
+- 보통 requirements.txt 파일에 저장
+- pip freeze 명령어는 해당 환경에 설치된 모든 패키지를 보여줌
+- ' > '는 프로그램의 출력을 파일에 저장한다는 뜻
+- pip freeze > requirements.txt로 생성
+
+
+
+##### IAM
+
+- Identity and Access Management의 줄임말
+- IAM에서 계정을 만든 후 해당 계정 로그인 정보 (엑세스 키 & 시크릿 키)를 이용하여 AWS의 API 활용
+- 보안을 위해 권한을 최대한 보수적으로 잡음
+
+
+
+##### S3
+
+- Simple Storage Service 의 줄임말
+- AWS에서 제공하는 구글드라이브 정도로 생각할 수 있음
+- 최초 용량 지정 없이 사용한 만큼만 과금되므로 용량 예측 필요 X
+- 여러 서버에서 동시에 접속 가능 (부하 분산 유리)
+
+
+
+# Heroku 배포하기
+
+1. Heroku 회원가입
+
+2. Hereko CLI 설치
+
+3. 환경 변수 적용
+
+   1. Debug 는 아래 값 사용
+      1. DBUG = (os.environ.get('DEBUG', 'TRUE') != 'False')
+
+4. .gitignore 파일 적용
+
+   1. gitignore.io에서 Django 선택 후 '생성' 클릭
+   2. 페이지에서 나온 텍스트를 모두 복사후 .gitignore 파일로 저장
+
+5. Heroku 용 파일 작성
+
+   1. Procfile 이라는 파일을 만들어 아래 내용 작성
+      1. web: gunicorn 프로젝트명.wsgi --log-file -
+   2. runtime.txt 파일에 아래 내용 작성
+      1. python-3.9.1
+
+6. 필요한 Dependency 설치
+
+   1. pip install gunicorn whitenoise df-database-url psycopg2-binary
+
+7. settings.py 수정
+
+   1. Whitenoise 설치
+
+      1. MIDDLEWARE 에서 제일 SecurityMiddleware 바로 아래 내용 추가
+         1. 'whitenoise.middleware.WhileNoiseMiddleware'.
+
+   2. ALLOWED_HOSTS 수정
+
+      1. ALLOWED_HOSTS = [] 를 ALLOWED_HOSTS = [ ' * ' ]로 수정
+
+   3. DB 관련 코드 수정
+
+      1. settings.py 제일 밑에 아래 내용 추가
+
+      > import dj_database_url
+      >
+      > db_from_env = dj_database_url.config(conn_max_age=500)
+      >
+      > DATABASES['default'].update(db_from_env)
+
+1. requirements. txt 생성
+
+   1. pip freeze > requirements.txt
+
+2. git에 수정된 파일들 추가
+
+   1. git add -A
+   2. git commit -m "add files for deploying to heroku"
+
+3. Heroku 관련 명령어들 실행
+
+   1. heroku login
+   2. heroku create
+   3. git push heroku main
+   4. heroku run python manage.py migrate
+   5. heroku run python manage.py createsuperuser
+   6. heroku open
+
+4. Heroku 에서 환경 변수 설정
+
+   1. https://dashboard.heroku.com 에서 앱 선택
+   2. Settings
+   3. Config Vars > Reveal Config Vars
+   4. KEY VALUE 값에 입력후 저장
+
+   
+
+   # Docker
+
+https://www.yalco.kr/08_docker/           // 참고하기
+
+
+
+##### Docker 이미지 생성
+
+준비사항
+
+- Gitpod.io 계정 (Free or Student)
+
+- Gitpod 설정 수정
+
+  - Feature Preview > Enable Feature Preview 체크
+  - Default IDE 선택
+    1. Theia : Eclipse 팀이 만든 IDE / 강의에서 사용
+    2. Code : VSCode 의 웹버전 IDE / 호환성 이슈 있음
+  - Gitpod 인스턴스 새성
+    1. 본인의 GitHub 레포지토리로 이동
+    2. 레포지토리 주소 앞에 gotpod.io/#을 붙임
+    3. 예)gitpod.io/#https://github.com/username/repo
+  - DockerHub 계정 생성
+
+  
+
+  
+
+  
+
